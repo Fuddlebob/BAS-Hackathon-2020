@@ -12,6 +12,7 @@ import jsonreader
 #made for BAS Hackathon 2020
 #Author: Fuddlebob
 
+#in real life this is 6.67e-11 but luckily these are made up units so I can make it whatever the hell I want
 G = 6.67e-2
 
 #read in config file
@@ -48,13 +49,16 @@ def main():
 	bodies = []
 	numBodies = random.randint(2, 13)
 	print("Initilising...")
+	fb_message = ""
 	for i in (range(numBodies)):
 		mass = random.uniform(20, 200)
 		position = np.array([(random.random() * canvas_height * 0.75) + 0.125 * canvas_height, (random.random() * canvas_width * 0.75) + 0.125 * canvas_width])
 		velocity = np.array([(random.random() - 0.5) * 10, (random.random() - 0.5) * 10])
 		colour = (random.randint(100, 255),random.randint(100, 255),random.randint(100, 255))
 		bodies.append(Body(mass, position, velocity, i, colour))
+		fb_message = fb_message + "Planet {0}: Mass: {1:.2f}, Starting Position: ({2:.2f}, {3:.2f}), Starting Velocity ({4:.2f}, {5:.2f})\n".format(i + 1, mass, position[1], position[0], velocity[1], velocity[0])
 	
+	print(fb_message)
 	canvas = np.zeros(canvas_size, np.uint8)
 	vid = cv2.VideoWriter(avi_out, 0, 20, (canvas_size[1], canvas_size[0]))
 	clearcount = 0
@@ -82,7 +86,7 @@ def main():
 	
 	if(post_to_fb):
 		print("Posting to Facebook...")
-		upload_to_facebook(mp4_out, "Test")
+		upload_to_facebook(mp4_out, fb_message)
 		
 
 def render(bodies, canvas):
