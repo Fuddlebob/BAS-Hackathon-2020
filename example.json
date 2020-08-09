@@ -1,0 +1,10 @@
+{
+	"fb_token" : "Your FB Token Here",
+	"upload" : false,
+	"canvas_width" : 720,
+	"canvas_height" : 480,
+	"avi_out" : "planets.avi",
+	"mp4_out" : "planets.mp4",
+	"timesteps" : 1
+}
+	

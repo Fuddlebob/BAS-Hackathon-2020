@@ -1,1 +1,5 @@
 *.avi
+*.mp4
+*.json
+!example.json
+__pycacher__/*
