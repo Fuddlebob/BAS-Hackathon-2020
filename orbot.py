@@ -31,7 +31,6 @@ avi_out = cfg["avi_out"]
 mp4_out = cfg["mp4_out"]
 timesteps_per_frame = cfg["timesteps"]
 
-FB_TOKEN = "***REMOVED***"
 FACEBOOK_MEDIA_ENDPOINT_URL = 'https://graph-video.facebook.com/me/videos'
 
 class Body(object):
