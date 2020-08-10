@@ -45,10 +45,12 @@ class Body(object):
 		
 		
 def main():
+	#first, remove existing files
+	print("Removing files...")
+	remove_files()
 	bodies = []
 	numBodies = random.randint(3, 18)
 	print("Initilising...")
-	fb_message = ""
 	for i in (range(numBodies)):
 		mass = 0
 		while (mass <= 0):
@@ -57,13 +59,25 @@ def main():
 		velocity = np.array([(random.random() - 0.5) * 12, (random.random() - 0.5) * 12])
 		colour = (random.randint(100, 255),random.randint(100, 255),random.randint(100, 255))
 		bodies.append(Body(mass, position, velocity, i, colour))
-		fb_message = fb_message + "Planet {0}: Mass: {1:.2f}, Starting Position: ({2:.2f}, {3:.2f}), Starting Velocity ({4:.2f}, {5:.2f})\n".format(i + 1, mass, position[1], position[0], velocity[1], velocity[0])
+		
 	
+	#determine camera offset so camera is centered better
+	tot = np.array([0,0])
+	for b in bodies:
+			tot = tot + b.position
+	av = tot / numBodies
+	#subtract average from each body position, then add center of canvas
+	#also construct the fb message here while we're at it
+	fb_message = ""
+	for b in bodies:
+		b.position = b.position - av + np.array([canvas_height/2, canvas_width/2])
+		fb_message = fb_message + "Planet {0}: Mass: {1:.2f}, Starting Position: ({2:.2f}, {3:.2f}), Starting Velocity ({4:.2f}, {5:.2f})\n".format(b.id + 1, b.mass, b.position[1], b.position[0], b.velocity[1], b.velocity[0])
 	print(fb_message)
 	canvas = np.zeros(canvas_size, np.uint8)
 	vid = cv2.VideoWriter(avi_out, 0, 20, (canvas_size[1], canvas_size[0]))
 	clearcount = 0
 	print("Rendering steps...")
+	#start performing timesteps and rendering images
 	for i in range(600):
 		canvas = (canvas * 0.99).astype(np.uint8)
 		for j in range(timesteps_per_frame):
@@ -71,25 +85,38 @@ def main():
 			bodies = step(bodies)
 			canvas = mark_path(oldBodies, bodies, canvas)
 		im = render(bodies, canvas.copy())
+		#immediately write the image to the video
 		vid.write(im)
-		if((im < 15).all()):
+		#if the screen is appropriately dark for long enough, end early
+		if((im < 30).all()):
 			clearcount += 1
-			if(clearcount >= 30):
+			if(clearcount >= 20):
 				break
 		else:
 			clearcount = 0
+	#save the video
 	vid.release()
+	#convert to mp4 for smaller file size
 	print("Converting to mp4...")
 	with open(os.devnull, 'w') as shutup:
 		subprocess.call(['ffmpeg', '-y', '-i', avi_out, '-ac', '2', '-b:v', '2000k', '-c:a', 'aac',  
 			'-c:v', 'libx264', '-b:a', '160k', '-vprofile', 'high', '-bf',
 			'0', '-strict', 'experimental', '-f', 'mp4', mp4_out], stdout=shutup, stderr=shutup)
 	
+	#finally, post to facebook
 	if(post_to_fb):
 		print("Posting to Facebook...")
 		upload_to_facebook(mp4_out, fb_message)
 		
+def remove_files():
+	#removes files
+	if os.path.exists(avi_out):
+		os.remove(avi_out)
+	if os.path.exists(mp4_out):
+		os.remove(mp4_out)
 
+
+#draws a bunch of fuckin circles
 def render(bodies, canvas):
 	if(canvas is None):
 		canvas = np.zeros(canvas_size, np.uint8)
@@ -99,16 +126,20 @@ def render(bodies, canvas):
 		canvas = cv2.circle(canvas, pos, mass2size(b.mass), b.colour, thickness=-1)
 	return canvas
 	
+#marks the path that each body took in between steps
 def mark_path(oldBodies, newBodies, canvas):
 	for i in range(len(oldBodies)):
+		#need to reverse the x/y because numpy is stupid
 		oldpos = (int(oldBodies[i].position[1]), int(oldBodies[i].position[0]))
 		newpos = (int(newBodies[i].position[1]), int(newBodies[i].position[0]))
 		canvas = cv2.line(canvas, oldpos, newpos, oldBodies[i].colour, thickness = 2)
 	
 	return canvas
-def mass2size(m):
-	return int(math.sqrt((m * 10)/math.pi))
 	
+#converts planet mass to circle radius
+def mass2size(m):
+	return int(math.sqrt((m * 7)/math.pi))
+
 #calculates distance between two points
 def dist(p1, p2):
 	return np.linalg.norm(p1 - p2)
@@ -141,7 +172,7 @@ def step(bodies):
 		
 	return bodies.copy()
 
-
+#uploads vidname to facebook, with message
 def upload_to_facebook(vidname, message):
 	files={'file':open(vidname,'rb')}
 	params = (
