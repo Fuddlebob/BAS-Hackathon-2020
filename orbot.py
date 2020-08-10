@@ -13,7 +13,7 @@ import jsonreader
 #Author: Fuddlebob
 
 #in real life this is 6.67e-11 but luckily these are made up units so I can make it whatever the hell I want
-G = 6.67e-2
+G = 6.67e-1
 
 #read in config file
 if(len(sys.argv) > 1):
@@ -46,13 +46,13 @@ class Body(object):
 		
 def main():
 	bodies = []
-	numBodies = random.randint(2, 13)
+	numBodies = random.randint(3, 18)
 	print("Initilising...")
 	fb_message = ""
 	for i in (range(numBodies)):
-		mass = random.uniform(20, 200)
+		mass = random.uniform(10, 300)
 		position = np.array([(random.random() * canvas_height * 0.75) + 0.125 * canvas_height, (random.random() * canvas_width * 0.75) + 0.125 * canvas_width])
-		velocity = np.array([(random.random() - 0.5) * 10, (random.random() - 0.5) * 10])
+		velocity = np.array([(random.random() - 0.5) * 12, (random.random() - 0.5) * 12])
 		colour = (random.randint(100, 255),random.randint(100, 255),random.randint(100, 255))
 		bodies.append(Body(mass, position, velocity, i, colour))
 		fb_message = fb_message + "Planet {0}: Mass: {1:.2f}, Starting Position: ({2:.2f}, {3:.2f}), Starting Velocity ({4:.2f}, {5:.2f})\n".format(i + 1, mass, position[1], position[0], velocity[1], velocity[0])
@@ -128,7 +128,8 @@ def step(bodies):
 					ndir = dir/d
 				#calculate gravitational pull
 				#F = (G*m1*m2)/d^2
-				pull = (G * b.mass * b2.mass) / (d * d)
+				#m1 cancels out when we solve for acceleration (F = ma, a = F/m)
+				pull = (G * b2.mass) / (d * d)
 				total = total + (pull * ndir)
 		deltavs[b.id] = total	
 	
