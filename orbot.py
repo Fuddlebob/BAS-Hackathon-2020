@@ -50,7 +50,9 @@ def main():
 	print("Initilising...")
 	fb_message = ""
 	for i in (range(numBodies)):
-		mass = random.uniform(10, 300)
+		mass = 0
+		while (mass <= 0):
+			mass = random.gauss(150, 120) 
 		position = np.array([(random.random() * canvas_height * 0.75) + 0.125 * canvas_height, (random.random() * canvas_width * 0.75) + 0.125 * canvas_width])
 		velocity = np.array([(random.random() - 0.5) * 12, (random.random() - 0.5) * 12])
 		colour = (random.randint(100, 255),random.randint(100, 255),random.randint(100, 255))
@@ -98,7 +100,6 @@ def render(bodies, canvas):
 	return canvas
 	
 def mark_path(oldBodies, newBodies, canvas):
-	
 	for i in range(len(oldBodies)):
 		oldpos = (int(oldBodies[i].position[1]), int(oldBodies[i].position[0]))
 		newpos = (int(newBodies[i].position[1]), int(newBodies[i].position[0]))
